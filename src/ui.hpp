@@ -15,8 +15,7 @@ public:
   typedef struct Modestr {
     std::string prefix;
     std::string mode;
-    Modestr(const std::string &mode, const std::string &prefix)
-        : prefix(prefix), mode(mode) {}
+    Modestr(const std::string &mode, const std::string &prefix) : prefix(prefix), mode(mode) {}
   } Modestr;
   // 用于帮助渲染滚屏。当光标达到上边界或下边界时被使用。
   typedef enum class YRenderTextFlag {
@@ -30,9 +29,8 @@ public:
     LeftBoundary = 1,  // 上边界。
     RightBoundary = 2, // 下边界。
   } XRenderTextFlag;
-  std::pair<XRenderTextFlag, YRenderTextFlag>
-  show_text(const std::vector<std::vector<Character>> &text,
-            const Coord &cursor, size_t xoffset = 0, size_t yoffset = 0) const {
+  std::pair<XRenderTextFlag, YRenderTextFlag> show_text(const std::vector<std::vector<Character>> &text, const Coord &cursor, size_t xoffset = 0,
+                                                        size_t yoffset = 0) const {
     size_t vec_index = yoffset, str_index = 0;
     size_t y = 0, x = 0;
     XRenderTextFlag flag = XRenderTextFlag::None;
@@ -40,8 +38,7 @@ public:
     const Coord &sz = screen->size();
     for (; y < sz.y - 2 && vec_index < text.size(); y++, vec_index++) {
       str_index = xoffset;
-      for (x = 0; x < sz.x && str_index < text[vec_index].size();
-           x++, str_index++) {
+      for (x = 0; x < sz.x && str_index < text[vec_index].size(); x++, str_index++) {
         if (vec_index == cursor.y && str_index == cursor.x) {
           if (x == 0) {
             flag = XRenderTextFlag::LeftBoundary;
@@ -54,14 +51,9 @@ public:
             flag2 = YRenderTextFlag::LowerBoundary;
           }
           if (text[vec_index][str_index].prefix == "") {
-            screen->set(Coord(x, y),
-                        Character(text[vec_index][str_index].content,
-                                  "\x1b[38;5;247m\x1b[47m"));
+            screen->set(Coord(x, y), Character(text[vec_index][str_index].content, "\x1b[38;5;247m\x1b[47m"));
           } else
-            screen->set(
-                Coord(x, y),
-                Character(text[vec_index][str_index].content,
-                          text[vec_index][str_index].prefix + "\x1b[47m"));
+            screen->set(Coord(x, y), Character(text[vec_index][str_index].content, text[vec_index][str_index].prefix + "\x1b[47m"));
         } else {
           screen->set(Coord(x, y), text[vec_index][str_index]);
         }
@@ -95,35 +87,28 @@ public:
     }
     return {flag, flag2};
   }
-  void show_bar(const Modestr &mode, const std::string &hint,
-                const std::string &back_str) const {
+  void show_bar(const Modestr &mode, const std::string &hint, const std::string &back_str) const {
     // 基层
     for (size_t i = 0; i < screen->size().x; i++) {
       screen->set(Coord(i, screen->size().y - 2), Character(0, "\x1b[44m"));
     }
     size_t counter = 0;
     // 左侧
-    screen->set(Coord(counter++, screen->size().y - 2),
-                Character(0, mode.prefix));
+    screen->set(Coord(counter++, screen->size().y - 2), Character(0, mode.prefix));
     for (size_t i = 0; i < mode.mode.length(); i++, counter++) {
-      screen->set(Coord(counter, screen->size().y - 2),
-                  Character(mode.mode[i], mode.prefix));
+      screen->set(Coord(counter, screen->size().y - 2), Character(mode.mode[i], mode.prefix));
     }
-    screen->set(Coord(counter++, screen->size().y - 2),
-                Character(0, mode.prefix));
+    screen->set(Coord(counter++, screen->size().y - 2), Character(0, mode.prefix));
     // 中间
-    screen->set(Coord(counter++, screen->size().y - 2),
-                Character(0, "\x1b[44m"));
+    screen->set(Coord(counter++, screen->size().y - 2), Character(0, "\x1b[44m"));
     for (size_t i = 0; i < hint.length(); counter++, i++) {
-      screen->set(Coord(counter, screen->size().y - 2),
-                  Character(hint[i], "\x1b[97;44m"));
+      screen->set(Coord(counter, screen->size().y - 2), Character(hint[i], "\x1b[97;44m"));
     }
     // 右侧
     counter = screen->size().x - 1;
     screen->set(Coord(counter, screen->size().y - 2), Character(0, "\x1b[43m"));
     for (size_t i = back_str.length(); counter--, i--;) {
-      screen->set(Coord(counter, screen->size().y - 2),
-                  Character(back_str[i], "\x1b[30;43m"));
+      screen->set(Coord(counter, screen->size().y - 2), Character(back_str[i], "\x1b[30;43m"));
     }
     screen->set(Coord(counter, screen->size().y - 2), Character(0, "\x1b[43m"));
   }
@@ -143,8 +128,7 @@ public:
 
 namespace PlainText {
 // 默认的 render。不会给代码上色。
-inline std::vector<std::vector<Character>>
-render(const std::vector<std::string> &str) {
+inline std::vector<std::vector<Character>> render(const std::vector<std::string> &str) {
   std::vector<std::vector<Character>> ret;
   for (size_t i = 0; i < str.size(); i++) {
     std::vector<Character> tmp;
@@ -236,18 +220,13 @@ typedef class TextArea {
     }
     const Coord &pos() const noexcept { return cur_pos; }
     ScreenPos() {}
-    ScreenPos(const Coord &cur_pos, size_t xoffset, size_t yoffset,
-              UI::XRenderTextFlag xrender_flag,
-              UI::YRenderTextFlag yrender_flag)
-        : cur_pos(cur_pos), xoffset(xoffset), yoffset(yoffset),
-          xrender_flag(xrender_flag), yrender_flag(yrender_flag) {}
+    ScreenPos(const Coord &cur_pos, size_t xoffset, size_t yoffset, UI::XRenderTextFlag xrender_flag, UI::YRenderTextFlag yrender_flag)
+        : cur_pos(cur_pos), xoffset(xoffset), yoffset(yoffset), xrender_flag(xrender_flag), yrender_flag(yrender_flag) {}
   } ScreenPos;
   std::vector<std::string> text;
   std::vector<std::vector<Character>> cache;
   std::string filename;
-  std::function<std::vector<std::vector<Character>>(
-      const std::vector<std::string> &)>
-      renderer;
+  std::function<std::vector<std::vector<Character>>(const std::vector<std::string> &)> renderer;
   ScreenPos pos;
   std::pair<Coord, Coord> select_pos;
   size_t select_yoffset;
@@ -259,29 +238,20 @@ typedef class TextArea {
 
 public:
   TextArea() {}
-  TextArea(const std::function<std::vector<std::vector<Character>>(
-               const std::vector<std::string> &)> &renderer,
-           const std::vector<std::string> &text, bool readonly)
-      : text(text), renderer(renderer),
-        pos(Coord(0, 0), 0, 0, UI::XRenderTextFlag::None,
-            UI::YRenderTextFlag::None),
-        select_pos({Coord(0, 0), Coord(0, 0)}), select_yoffset(0), x_before(0),
-        mode(Normal), dirty(true), file_changed(false), readonly(readonly) {}
-  TextArea(const std::function<std::vector<std::vector<Character>>(
-               const std::vector<std::string> &)> &renderer,
-           const std::string &filename, bool readonly)
-      : filename(filename), renderer(renderer),
-        pos(Coord(0, 0), 0, 0, UI::XRenderTextFlag::None,
-            UI::YRenderTextFlag::None),
-        select_pos({Coord(0, 0), Coord(0, 0)}), select_yoffset(0), x_before(0),
-        mode(Normal), dirty(true), file_changed(false), readonly(readonly) {
+  TextArea(const std::function<std::vector<std::vector<Character>>(const std::vector<std::string> &)> &renderer, const std::vector<std::string> &text,
+           bool readonly)
+      : text(text), renderer(renderer), pos(Coord(0, 0), 0, 0, UI::XRenderTextFlag::None, UI::YRenderTextFlag::None),
+        select_pos({Coord(0, 0), Coord(0, 0)}), select_yoffset(0), x_before(0), mode(Normal), dirty(true), file_changed(false), readonly(readonly) {}
+  TextArea(const std::function<std::vector<std::vector<Character>>(const std::vector<std::string> &)> &renderer, const std::string &filename,
+           bool readonly)
+      : filename(filename), renderer(renderer), pos(Coord(0, 0), 0, 0, UI::XRenderTextFlag::None, UI::YRenderTextFlag::None),
+        select_pos({Coord(0, 0), Coord(0, 0)}), select_yoffset(0), x_before(0), mode(Normal), dirty(true), file_changed(false), readonly(readonly) {
     std::ifstream fs = std::ifstream(filename);
     if (!fs) {
       text.push_back("");
       return;
     }
-    std::string raw = std::string(std::istreambuf_iterator<char>(fs),
-                                  std::istreambuf_iterator<char>());
+    std::string raw = std::string(std::istreambuf_iterator<char>(fs), std::istreambuf_iterator<char>());
     fs.close();
     std::string tmp = "";
     for (size_t i = 0; i < raw.length(); i++) {
@@ -332,20 +302,15 @@ public:
   }
   const std::string &get_filename() const noexcept { return filename; }
   bool is_changed() const noexcept { return file_changed; }
-  void switch_renderer(const std::function<std::vector<std::vector<Character>>(
-                           const std::vector<std::string> &)> &new_renderer) {
+  void switch_renderer(const std::function<std::vector<std::vector<Character>>(const std::vector<std::string> &)> &new_renderer) {
     renderer = new_renderer;
     dirty = true;
   }
-  std::vector<std::vector<Character>>
-  select_render(const std::vector<std::vector<Character>> &c) const {
+  std::vector<std::vector<Character>> select_render(const std::vector<std::vector<Character>> &c) const {
     std::vector<std::vector<Character>> ret = c;
     for (size_t y = start_range().y; y < end_range().y + 1; y++) {
       for (size_t x = (y == start_range().y ? start_range().x : 0);
-           y == end_range().y
-               ? (x < std::min<size_t>({ret[y].size(), end_range().x + 1}))
-               : (x < ret[y].size());
-           x++) {
+           y == end_range().y ? (x < std::min<size_t>({ret[y].size(), end_range().x + 1})) : (x < ret[y].size()); x++) {
         if (ret[y][x].prefix == "")
           ret[y][x].prefix = "\x1b[38;5;247m\x1b[48;5;250m";
         else
@@ -365,21 +330,15 @@ public:
     //     (size_t)std::max<int>({0, int(pos.pos().x - ui->size().x + 1)}),
     //     pos.yoffset);
     std::pair<UI::XRenderTextFlag, UI::YRenderTextFlag> temp =
-        ui->show_text(mode == Select ? select_render(cache) : cache, pos.pos(),
-                      pos.xoffset, pos.yoffset);
+        ui->show_text(mode == Select ? select_render(cache) : cache, pos.pos(), pos.xoffset, pos.yoffset);
     pos.xrender_flag = temp.first, pos.yrender_flag = temp.second;
     if (filename == "") {
-      ui->show_bar(mode2str(mode),
-                   std::string("(unnamed)") + (file_changed ? "[+]" : ""),
-                   std::string("ln: ") + std::to_string(pos.pos().y + 1) + "/" +
-                       std::to_string(text.size()) +
+      ui->show_bar(mode2str(mode), std::string("(unnamed)") + (file_changed ? "[+]" : ""),
+                   std::string("ln: ") + std::to_string(pos.pos().y + 1) + "/" + std::to_string(text.size()) +
                        " col: " + std::to_string(pos.pos().x + 1));
     } else {
-      ui->show_bar(mode2str(mode),
-                   filename.substr(filename.find_last_of('/') + 1) +
-                       (file_changed ? "[+]" : ""),
-                   std::string("ln: ") + std::to_string(pos.pos().y + 1) + "/" +
-                       std::to_string(text.size()) +
+      ui->show_bar(mode2str(mode), filename.substr(filename.find_last_of('/') + 1) + (file_changed ? "[+]" : ""),
+                   std::string("ln: ") + std::to_string(pos.pos().y + 1) + "/" + std::to_string(text.size()) +
                        " col: " + std::to_string(pos.pos().x + 1));
     }
     ui->show_info(info);
@@ -394,21 +353,13 @@ public:
       dirty = true;
       flag = true;
       if (start_range().y == end_range().y) {
-        text[start_range().y] =
-            text[start_range().y].substr(0, start_range().x) +
-            text[start_range().y].substr(
-                (end_range().x == text[start_range().y].size())
-                    ? end_range().x
-                    : (end_range().x + 1));
+        text[start_range().y] = text[start_range().y].substr(0, start_range().x) +
+                                text[start_range().y].substr((end_range().x == text[start_range().y].size()) ? end_range().x : (end_range().x + 1));
       } else {
-        text.erase(text.cbegin() + start_range().y,
-                   text.cbegin() + end_range().y - 1);
+        text.erase(text.cbegin() + start_range().y, text.cbegin() + end_range().y - 1);
         text[start_range().y] =
             text[start_range().y].substr(0, start_range().x) +
-            text[start_range().y + 1].substr(
-                (end_range().x == text[start_range().y + 1].size())
-                    ? end_range().x
-                    : (end_range().x + 1));
+            text[start_range().y + 1].substr((end_range().x == text[start_range().y + 1].size()) ? end_range().x : (end_range().x + 1));
         text.erase(text.cbegin() + start_range().y + 1);
       }
       pos.set_x(start_range().x, screen.size().x - 1);
@@ -420,8 +371,7 @@ public:
     switch (op) {
     case '\n': {
       // 换行
-      text.insert(text.begin() + pos.pos().y + 1,
-                  text[pos.pos().y].substr(pos.pos().x));
+      text.insert(text.begin() + pos.pos().y + 1, text[pos.pos().y].substr(pos.pos().x));
       text[pos.pos().y] = text[pos.pos().y].substr(0, pos.pos().x);
       pos.add_y(text.size() - 1);
       pos.set_x(0, screen.size().x - 1);
@@ -439,8 +389,7 @@ public:
             pos.sub_y();
             pos.set_x(tmp, screen.size().x - 1);
           } else {
-            text[pos.pos().y] = text[pos.pos().y].substr(0, pos.pos().x - 1) +
-                                text[pos.pos().y].substr(pos.pos().x);
+            text[pos.pos().y] = text[pos.pos().y].substr(0, pos.pos().x - 1) + text[pos.pos().y].substr(pos.pos().x);
             pos.sub_x();
           }
           dirty = true;
@@ -450,9 +399,7 @@ public:
     }
     default: {
       if (op == '\t') {
-        text[pos.pos().y] = text[pos.pos().y].substr(0, pos.pos().x) +
-                            std::string(TAB_SIZE, ' ') +
-                            text[pos.pos().y].substr(pos.pos().x);
+        text[pos.pos().y] = text[pos.pos().y].substr(0, pos.pos().x) + std::string(TAB_SIZE, ' ') + text[pos.pos().y].substr(pos.pos().x);
         // pos.pos().x += TAB_SIZE;
         pos.set_x(pos.pos().x + 2, screen.size().x - 1);
       } else {
@@ -561,11 +508,8 @@ public:
           pos.set_x(x_before, screen.size().x - 1);
         }
         if (mode == Select) {
-          if (start_range().y > pos.pos().y ||
-              (start_range().y == pos.pos().y &&
-               start_range().x > pos.pos().x) ||
-              (start_range().x == end_range().x &&
-               start_range().y == end_range().y)) {
+          if (start_range().y > pos.pos().y || (start_range().y == pos.pos().y && start_range().x > pos.pos().x) ||
+              (start_range().x == end_range().x && start_range().y == end_range().y)) {
             select_yoffset = pos.yoffset;
             start_range() = pos.pos();
           } else
@@ -584,8 +528,7 @@ public:
           pos.set_x(x_before, screen.size().x - 1);
         }
         if (mode == Select) {
-          if (end_range().y > pos.pos().y ||
-              (end_range().y == pos.pos().y && end_range().x > pos.pos().x)) {
+          if (end_range().y > pos.pos().y || (end_range().y == pos.pos().y && end_range().x > pos.pos().x)) {
             select_yoffset = pos.yoffset;
             start_range() = pos.pos();
           } else
@@ -604,8 +547,7 @@ public:
       }
       x_before = pos.pos().x;
       if (mode == Select) {
-        if (end_range().y > pos.pos().y ||
-            (end_range().y == pos.pos().y && end_range().x > pos.pos().x)) {
+        if (end_range().y > pos.pos().y || (end_range().y == pos.pos().y && end_range().x > pos.pos().x)) {
           select_yoffset = pos.yoffset;
           start_range() = pos.pos();
         } else
@@ -623,10 +565,8 @@ public:
       }
       x_before = pos.pos().x;
       if (mode == Select) {
-        if (start_range().y > pos.pos().y ||
-            (start_range().y == pos.pos().y && start_range().x > pos.pos().x) ||
-            (start_range().x == end_range().x &&
-             start_range().y == end_range().y)) {
+        if (start_range().y > pos.pos().y || (start_range().y == pos.pos().y && start_range().x > pos.pos().x) ||
+            (start_range().x == end_range().x && start_range().y == end_range().y)) {
           select_yoffset = pos.yoffset;
           start_range() = pos.pos();
         } else

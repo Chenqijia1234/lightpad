@@ -15,8 +15,7 @@ typedef struct ColorText {
     return ret;
   }
   ColorText() {}
-  ColorText(const std::string &content, const std::string &prefix)
-      : prefix(prefix), content(content) {}
+  ColorText(const std::string &content, const std::string &prefix) : prefix(prefix), content(content) {}
 } ColorText;
 typedef enum TokenType {
   None = 0,
@@ -31,9 +30,8 @@ typedef enum TokenType {
 } TokenType;
 inline bool isnum(const std::string &p) {
   for (size_t i = 0; i < p.length(); i++) {
-    if ((p[i] >= '0' && p[i] <= '9') || (p[i] >= 'A' && p[i] <= 'F') ||
-        (p[i] >= 'a' && p[i] <= 'f') || p[i] == 'x' || p[i] == 'X' ||
-        p[i] == '.' || p[i] == 'e')
+    if ((p[i] >= '0' && p[i] <= '9') || (p[i] >= 'A' && p[i] <= 'F') || (p[i] >= 'a' && p[i] <= 'f') || p[i] == 'x' || p[i] == 'X' || p[i] == '.' ||
+        p[i] == 'e')
       ;
     else
       return false;
@@ -72,8 +70,7 @@ inline bool isIdentifier(const std::string &x) {
     if (x[i] >= '0' && x[i] <= '9') {
       if (!flag)
         return false;
-    } else if ((x[i] >= 'a' && x[i] <= 'z') || (x[i] >= 'A' && x[i] <= 'Z') ||
-               x[i] == '_')
+    } else if ((x[i] >= 'a' && x[i] <= 'z') || (x[i] >= 'A' && x[i] <= 'Z') || x[i] == '_')
       continue;
     else
       return false;
@@ -93,28 +90,17 @@ inline void _transfer(wchar_t i, size_t &z, size_t &a) {
     z = false;
 }
 constexpr std::array<const char *, 60> keyword = {
-    "bool",          "short",       "int",          "long",
-    "float",         "double",      "inline",       "auto",
-    "restrict",      "explicit",    "typeid",       "asm",
-    "alignas",       "alignof",     "class",        "enum",
-    "struct",        "operator",    "union",        "signed",
-    "unsigned",      "typedef",     "const",        "volatile",
-    "static",        "extern",      "noexcept",     "constexpr",
-    "void",          "typename",    "char",         "break",
-    "continue",      "for",         "if",           "else",
-    "while",         "do",          "switch",       "case",
-    "default",       "try",         "catch",        "throw",
-    "template",      "using",       "return",       "namespace",
-    "public",        "protected",   "private",      "new",
-    "static_assert", "delete",      "sizeof",       "decltype",
-    "const_cast",    "static_cast", "dynamic_cast", "reinterpret_cast"};
-constexpr std::array<const char *, 4> literal = {"true", "false", "NULL",
-                                                 "nullptr"};
+    "bool",     "short",   "int",           "long",     "float",    "double",   "inline",     "auto",        "restrict",     "explicit",
+    "typeid",   "asm",     "alignas",       "alignof",  "class",    "enum",     "struct",     "operator",    "union",        "signed",
+    "unsigned", "typedef", "const",         "volatile", "static",   "extern",   "noexcept",   "constexpr",   "void",         "typename",
+    "char",     "break",   "continue",      "for",      "if",       "else",     "while",      "do",          "switch",       "case",
+    "default",  "try",     "catch",         "throw",    "template", "using",    "return",     "namespace",   "public",       "protected",
+    "private",  "new",     "static_assert", "delete",   "sizeof",   "decltype", "const_cast", "static_cast", "dynamic_cast", "reinterpret_cast"};
+constexpr std::array<const char *, 4> literal = {"true", "false", "NULL", "nullptr"};
 inline ColorText _get_colortext(const std::string &tmp) {
   if (std::find(keyword.cbegin(), keyword.cend(), tmp) != keyword.cend()) {
     return ColorText(tmp, _render_color(Keyword));
-  } else if (std::find(literal.cbegin(), literal.cend(), tmp) !=
-             literal.cend()) {
+  } else if (std::find(literal.cbegin(), literal.cend(), tmp) != literal.cend()) {
     return ColorText(tmp, _render_color(Literal));
   } else if (isIdentifier(tmp)) {
     return ColorText(tmp, _render_color(Identifier));
@@ -124,24 +110,18 @@ inline ColorText _get_colortext(const std::string &tmp) {
     return ColorText(tmp, _render_color(None));
   }
 }
-std::array<char, 13> separator = {' ', ';', ',',  '{',  '}', '[', ']',
-                                  '(', ')', '\"', '\'', ':', '.'};
+std::array<char, 13> separator = {' ', ';', ',', '{', '}', '[', ']', '(', ')', '\"', '\'', ':', '.'};
 
-std::array<char, 13> op = {'+', '-', '*', '/', '>', '<', '=',
-                           '!', '&', '|', '%', '^', '~'};
-inline std::vector<ColorText> _render_one(const std::string &text,
-                                          bool *status) {
+std::array<char, 13> op = {'+', '-', '*', '/', '>', '<', '=', '!', '&', '|', '%', '^', '~'};
+inline std::vector<ColorText> _render_one(const std::string &text, bool *status) {
   std::string tmp;
   std::vector<ColorText> ret;
   for (size_t i = 0, a = 0, z = 0; i < text.length(); i++) {
     if (*status) {
-      for (; i < text.length() &&
-             (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "*/");
-           i++) {
+      for (; i < text.length() && (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "*/"); i++) {
         tmp += text[i];
       }
-      if (i == text.length() &&
-          (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "*/"))
+      if (i == text.length() && (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "*/"))
         break;
       *status = false;
       ret.push_back(ColorText(tmp, _render_color(Comment)));
@@ -167,25 +147,20 @@ inline std::vector<ColorText> _render_one(const std::string &text,
       tmp += text[i];
       continue;
     } else if (tmp == "#" && a == 0) {
-      for (; i < text.length() &&
-             (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "//");
-           i++) {
+      for (; i < text.length() && (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "//"); i++) {
         tmp += text[i];
       }
-      if (i == text.length() &&
-          (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "//")) {
+      if (i == text.length() && (tmp.length() < 2 || tmp.substr(tmp.length() - 2, 2) != "//")) {
         ret.push_back(ColorText(tmp, _render_color(PreProcessor)));
         tmp = "";
         break;
       }
       i -= 2;
-      ret.push_back(ColorText(tmp.substr(0, tmp.length() - 2),
-                              _render_color(PreProcessor)));
+      ret.push_back(ColorText(tmp.substr(0, tmp.length() - 2), _render_color(PreProcessor)));
       ret.push_back(ColorText(text.substr(i), _render_color(Comment)));
       tmp = "";
       break;
-    } else if (std::find(separator.cbegin(), separator.cend(), text[i]) !=
-               separator.cend()) {
+    } else if (std::find(separator.cbegin(), separator.cend(), text[i]) != separator.cend()) {
       ret.push_back(_get_colortext(tmp));
       tmp = "";
       if (text[i] != '\"' && text[i] != '\'')
@@ -193,20 +168,17 @@ inline std::vector<ColorText> _render_one(const std::string &text,
     } else if (std::find(op.cbegin(), op.cend(), text[i]) != op.cend()) {
       if (text[i] != '/' && text[i] != '*') {
         ret.push_back(_get_colortext(tmp));
-        ret.push_back(
-            ColorText(std::string(1, text[i]), _render_color(Operator)));
+        ret.push_back(ColorText(std::string(1, text[i]), _render_color(Operator)));
         tmp = "";
       } else {
-        if (text[i] == '/' && i + 1 < text.length() &&
-            (text[i + 1] == '*' || text[i + 1] == '/')) {
+        if (text[i] == '/' && i + 1 < text.length() && (text[i + 1] == '*' || text[i + 1] == '/')) {
           ret.push_back(_get_colortext(tmp));
           tmp = std::string(1, text[i]);
         } else if (text[i] == '*' && i > 0 && text[i - 1] == '/') {
           tmp += text[i];
         } else {
           ret.push_back(_get_colortext(tmp));
-          ret.push_back(
-              ColorText(std::string(1, text[i]), _render_color(Operator)));
+          ret.push_back(ColorText(std::string(1, text[i]), _render_color(Operator)));
           tmp = "";
         }
       }
@@ -221,8 +193,7 @@ inline std::vector<ColorText> _render_one(const std::string &text,
   }
   return ret;
 }
-inline std::vector<std::vector<ColorText>>
-_render(const std::vector<std::string> &text) {
+inline std::vector<std::vector<ColorText>> _render(const std::vector<std::string> &text) {
   std::vector<std::vector<ColorText>> ret(text.size());
   bool flag = false;
   for (size_t i = 0; i < text.size(); i++) {
@@ -230,11 +201,9 @@ _render(const std::vector<std::string> &text) {
   }
   return ret;
 }
-inline std::vector<std::vector<Character>>
-render(const std::vector<std::string> &text) {
+inline std::vector<std::vector<Character>> render(const std::vector<std::string> &text) {
   std::vector<std::vector<ColorText>> tmp = _render(text);
-  std::vector<std::vector<Character>> ret =
-      std::vector<std::vector<Character>>(tmp.size());
+  std::vector<std::vector<Character>> ret = std::vector<std::vector<Character>>(tmp.size());
   for (size_t i = 0; i < tmp.size(); i++) {
     for (size_t j = 0; j < tmp[i].size(); j++) {
       std::vector<Character> &&res = tmp[i][j].output();
