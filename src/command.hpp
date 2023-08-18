@@ -4,20 +4,20 @@
 #include <map>
 #include <memory>
 
-#include "./awacorn/awacorn.h"
-#include "./ui.h"
+#include "./awacorn/awacorn.hpp"
+#include "./ui.hpp"
 // argument, EventLoop, UI, Window list, index = success(true) | failed(false)
-typedef std::function<bool(const std::string&, Awacorn::EventLoop*, UI*,
-                           std::vector<TextArea>*, size_t*)>
+typedef std::function<bool(const std::string &, Awacorn::EventLoop *, UI *,
+                           std::vector<TextArea> *, size_t *)>
     Command;
 typedef class Parser {
   std::map<std::string, Command> cmd;
   Command default_command;
 
- public:
+public:
   Parser() {}
-  bool execute(const std::string& command, Awacorn::EventLoop* ev, UI* ui,
-               std::vector<TextArea>* window_list, size_t* index) const {
+  bool execute(const std::string &command, Awacorn::EventLoop *ev, UI *ui,
+               std::vector<TextArea> *window_list, size_t *index) const {
     size_t idx = command.find_first_of(' ');
     std::string name, arg;
     if (idx == std::string::npos) {
@@ -34,7 +34,7 @@ typedef class Parser {
       return default_command(command, ev, ui, window_list, index);
     return true;
   }
-  void set_default(const Command& fn) { default_command = fn; }
-  void set(const std::string& name, const Command& fn) { cmd[name] = fn; }
+  void set_default(const Command &fn) { default_command = fn; }
+  void set(const std::string &name, const Command &fn) { cmd[name] = fn; }
 } Parser;
 #endif

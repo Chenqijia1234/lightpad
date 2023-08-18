@@ -14,31 +14,30 @@ namespace Promise {
 typedef class Unknown {
   typedef struct Base {
     virtual ~Base() = default;
-    virtual const std::type_info& type() const = 0;
+    virtual const std::type_info &type() const = 0;
     virtual std::unique_ptr<Base> clone() const = 0;
   } Base;
-  template <typename T>
-  struct Derived : Base {
+  template <typename T> struct Derived : Base {
     T data;
     virtual std::unique_ptr<Base> clone() const override {
       return std::unique_ptr<Base>(new Derived<T>(data));
     }
-    virtual const std::type_info& type() const override { return typeid(T); }
-    Derived(const T& data) : data(data) {}
+    virtual const std::type_info &type() const override { return typeid(T); }
+    Derived(const T &data) : data(data) {}
   };
   std::unique_ptr<Base> ptr;
 
- public:
+public:
   Unknown() = default;
   template <typename T>
-  Unknown(const T& val) : ptr(std::unique_ptr<Base>(new Derived<T>(val))) {}
-  Unknown(const Unknown& val) : ptr(val.ptr ? val.ptr->clone() : nullptr) {}
-  Unknown& operator=(const Unknown& rhs) { return *new (this) Unknown(rhs); }
-  const std::type_info& type() const { return ptr->type(); }
-  template <typename T>
-  const T& cast() const {
-    Unknown::Derived<T>* _ptr = dynamic_cast<Unknown::Derived<T>*>(ptr.get());
-    if (_ptr) return _ptr->data;
+  Unknown(const T &val) : ptr(std::unique_ptr<Base>(new Derived<T>(val))) {}
+  Unknown(const Unknown &val) : ptr(val.ptr ? val.ptr->clone() : nullptr) {}
+  Unknown &operator=(const Unknown &rhs) { return *new (this) Unknown(rhs); }
+  const std::type_info &type() const { return ptr->type(); }
+  template <typename T> const T &cast() const {
+    Unknown::Derived<T> *_ptr = dynamic_cast<Unknown::Derived<T> *>(ptr.get());
+    if (_ptr)
+      return _ptr->data;
     throw std::bad_cast();
   }
 } Unknown;
@@ -47,9 +46,9 @@ typedef class Unknown {
  * @brief Promise的状态。
  */
 typedef enum Status {
-  Pending = 0,   // 等待中。
-  Resolved = 1,  // 已完成。
-  Rejected = 2   // 已失败。
+  Pending = 0,  // 等待中。
+  Resolved = 1, // 已完成。
+  Rejected = 2  // 已失败。
 } Status;
 
 // Promise<T>.then(std::function<Promise<Ret>(ArgType)>) sub-implementation
@@ -57,20 +56,20 @@ typedef enum Status {
 template <typename Ret, typename ArgType, template <typename T> class PromiseT,
           typename _Promise>
 struct _ThenPromiseImpl {
-  static PromiseT<Ret> apply(
-      const std::shared_ptr<_Promise>& pm,
-      const std::function<PromiseT<Ret>(const ArgType&)>& fn) {
+  static PromiseT<Ret>
+  apply(const std::shared_ptr<_Promise> &pm,
+        const std::function<PromiseT<Ret>(const ArgType &)> &fn) {
     PromiseT<Ret> t;
-    pm->then([t, fn](const ArgType& val) -> void {
+    pm->then([t, fn](const ArgType &val) -> void {
       try {
         PromiseT<Ret> tmp = fn(val);
-        tmp.then([t](const Ret& val) -> void { t.resolve(val); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.then([t](const Ret &val) -> void { t.resolve(val); });
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
@@ -78,20 +77,20 @@ struct _ThenPromiseImpl {
 template <typename ArgType, template <typename T> class PromiseT,
           typename _Promise>
 struct _ThenPromiseImpl<void, ArgType, PromiseT, _Promise> {
-  static PromiseT<void> apply(
-      const std::shared_ptr<_Promise>& pm,
-      const std::function<PromiseT<void>(const ArgType&)>& fn) {
+  static PromiseT<void>
+  apply(const std::shared_ptr<_Promise> &pm,
+        const std::function<PromiseT<void>(const ArgType &)> &fn) {
     PromiseT<void> t;
-    pm->then([t, fn](const ArgType& val) -> void {
+    pm->then([t, fn](const ArgType &val) -> void {
       try {
         PromiseT<void> tmp = fn(val);
         tmp.then([t]() -> void { t.resolve(); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
@@ -99,38 +98,38 @@ struct _ThenPromiseImpl<void, ArgType, PromiseT, _Promise> {
 // pm.then(std::function<Promise<Ret>()>) sub-implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _ThenPromiseImpl<Ret, void, PromiseT, _Promise> {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<PromiseT<Ret>()>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<PromiseT<Ret>()> &fn) {
     PromiseT<Ret> t;
     pm->then([t, fn]() -> void {
       try {
         PromiseT<Ret> tmp = fn();
-        tmp.then([t](const Ret& val) -> void { t.resolve(val); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.then([t](const Ret &val) -> void { t.resolve(val); });
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
 // pm.then(std::function<Promise<void>()>) sub-implementation
 template <template <typename T> class PromiseT, typename _Promise>
 struct _ThenPromiseImpl<void, void, PromiseT, _Promise> {
-  static PromiseT<void> apply(const std::shared_ptr<_Promise>& pm,
-                              const std::function<PromiseT<void>()>& fn) {
+  static PromiseT<void> apply(const std::shared_ptr<_Promise> &pm,
+                              const std::function<PromiseT<void>()> &fn) {
     PromiseT<void> t;
     pm->then([t, fn]() -> void {
       try {
         PromiseT<void> tmp = fn();
         tmp.then([t]() -> void { t.resolve(); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
@@ -140,17 +139,17 @@ struct _ThenPromiseImpl<void, void, PromiseT, _Promise> {
 template <typename Ret, typename ArgType, template <typename T> class PromiseT,
           typename _Promise>
 struct _ThenImpl {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<Ret(const ArgType&)>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<Ret(const ArgType &)> &fn) {
     PromiseT<Ret> t;
-    pm->then([t, fn](const ArgType& val) -> void {
+    pm->then([t, fn](const ArgType &val) -> void {
       try {
         t.resolve(fn(val));
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
@@ -158,9 +157,9 @@ struct _ThenImpl {
 template <typename Ret, typename ArgType, template <typename T> class PromiseT,
           typename _Promise>
 struct _ThenImpl<PromiseT<Ret>, ArgType, PromiseT, _Promise> {
-  static PromiseT<Ret> apply(
-      const std::shared_ptr<_Promise>& pm,
-      const std::function<PromiseT<Ret>(const ArgType&)>& fn) {
+  static PromiseT<Ret>
+  apply(const std::shared_ptr<_Promise> &pm,
+        const std::function<PromiseT<Ret>(const ArgType &)> &fn) {
     return _ThenPromiseImpl<Ret, ArgType, PromiseT, _Promise>::apply(pm, fn);
   }
 };
@@ -168,18 +167,18 @@ struct _ThenImpl<PromiseT<Ret>, ArgType, PromiseT, _Promise> {
 template <typename ArgType, template <typename T> class PromiseT,
           typename _Promise>
 struct _ThenImpl<void, ArgType, PromiseT, _Promise> {
-  static PromiseT<void> apply(const std::shared_ptr<_Promise>& pm,
-                              const std::function<void(const ArgType&)>& fn) {
+  static PromiseT<void> apply(const std::shared_ptr<_Promise> &pm,
+                              const std::function<void(const ArgType &)> &fn) {
     PromiseT<void> t;
-    pm->then([t, fn](const ArgType& val) -> void {
+    pm->then([t, fn](const ArgType &val) -> void {
       try {
         fn(val);
         t.resolve();
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
@@ -188,43 +187,43 @@ struct _ThenImpl<void, ArgType, PromiseT, _Promise> {
 // pm.then(std::function<Ret()>) implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _ThenImpl<Ret, void, PromiseT, _Promise> {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<Ret()>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<Ret()> &fn) {
     PromiseT<Ret> t;
     pm->then([t, fn]() -> void {
       try {
         t.resolve(fn());
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
 // pm.then(std::function<Promise<Ret>()>) implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _ThenImpl<PromiseT<Ret>, void, PromiseT, _Promise> {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<PromiseT<Ret>()>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<PromiseT<Ret>()> &fn) {
     return _ThenPromiseImpl<Ret, void, PromiseT, _Promise>::apply(pm, fn);
   }
 };
 // pm.then(std::function<void()>) implementation
 template <template <typename T> class PromiseT, typename _Promise>
 struct _ThenImpl<void, void, PromiseT, _Promise> {
-  static PromiseT<void> apply(const std::shared_ptr<_Promise>& pm,
-                              const std::function<void()>& fn) {
+  static PromiseT<void> apply(const std::shared_ptr<_Promise> &pm,
+                              const std::function<void()> &fn) {
     PromiseT<void> t;
     pm->then([t, fn]() -> void {
       try {
         fn();
         t.resolve();
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
-    pm->error([t](const Unknown& err) -> void { t.reject(err); });
+    pm->error([t](const Unknown &err) -> void { t.reject(err); });
     return t;
   }
 };
@@ -235,16 +234,16 @@ struct _ThenImpl<void, void, PromiseT, _Promise> {
 // pm.error(std::function<Promise<Ret>(Unknown)>) sub-implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _ErrorPromiseImpl {
-  static PromiseT<Ret> apply(
-      const std::shared_ptr<_Promise>& pm,
-      const std::function<PromiseT<Ret>(const Unknown&)>& fn) {
+  static PromiseT<Ret>
+  apply(const std::shared_ptr<_Promise> &pm,
+        const std::function<PromiseT<Ret>(const Unknown &)> &fn) {
     PromiseT<Ret> t;
-    pm->error([t, fn](const Unknown& val) -> void {
+    pm->error([t, fn](const Unknown &val) -> void {
       try {
         PromiseT<Ret> tmp = fn(val);
-        tmp.then([t](const Ret& val) -> void { t.resolve(val); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.then([t](const Ret &val) -> void { t.resolve(val); });
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
@@ -254,16 +253,16 @@ struct _ErrorPromiseImpl {
 // pm.error(std::function<Promise<void>(Unknown)>) sub-implementation
 template <template <typename T> class PromiseT, typename _Promise>
 struct _ErrorPromiseImpl<void, PromiseT, _Promise> {
-  static PromiseT<void> apply(
-      const std::shared_ptr<_Promise>& pm,
-      const std::function<PromiseT<void>(const Unknown&)>& fn) {
+  static PromiseT<void>
+  apply(const std::shared_ptr<_Promise> &pm,
+        const std::function<PromiseT<void>(const Unknown &)> &fn) {
     PromiseT<void> t;
-    pm->error([t, fn](const Unknown& val) -> void {
+    pm->error([t, fn](const Unknown &val) -> void {
       try {
         PromiseT<void> tmp = fn(val);
         tmp.then([t]() -> void { t.resolve(); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
@@ -275,13 +274,13 @@ struct _ErrorPromiseImpl<void, PromiseT, _Promise> {
 // pm.error(std::function<Ret(Unknown)>) implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _ErrorImpl {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<Ret(const Unknown&)>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<Ret(const Unknown &)> &fn) {
     PromiseT<Ret> t;
-    pm->error([t, fn](const Unknown& err) -> void {
+    pm->error([t, fn](const Unknown &err) -> void {
       try {
         t.resolve(fn(err));
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
@@ -291,22 +290,22 @@ struct _ErrorImpl {
 // pm.error(std::function<Promise<Ret>(Unknown)>) implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _ErrorImpl<PromiseT<Ret>, PromiseT, _Promise> {
-  static PromiseT<Ret> apply(
-      const std::shared_ptr<_Promise>& pm,
-      const std::function<PromiseT<Ret>(const Unknown&)>& fn) {
+  static PromiseT<Ret>
+  apply(const std::shared_ptr<_Promise> &pm,
+        const std::function<PromiseT<Ret>(const Unknown &)> &fn) {
     return _ErrorPromiseImpl<Ret, PromiseT, _Promise>::apply(pm, fn);
   }
 };
 // pm.error(std::function<void(Unknown)>) implementation
 template <template <typename T> class PromiseT, typename _Promise>
 struct _ErrorImpl<void, PromiseT, _Promise> {
-  static PromiseT<void> apply(const std::shared_ptr<_Promise>& pm,
-                              const std::function<void(const Unknown&)>& fn) {
+  static PromiseT<void> apply(const std::shared_ptr<_Promise> &pm,
+                              const std::function<void(const Unknown &)> &fn) {
     PromiseT<void> t;
-    pm->error([t, fn](const Unknown& err) -> void {
+    pm->error([t, fn](const Unknown &err) -> void {
       try {
         fn(err);
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
         return;
       }
@@ -320,15 +319,15 @@ struct _ErrorImpl<void, PromiseT, _Promise> {
 // pm.finally(std::function<Promise<Ret>()>) sub-implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _FinallyPromiseImpl {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<PromiseT<Ret>()>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<PromiseT<Ret>()> &fn) {
     PromiseT<Ret> t;
     pm->finally([t, fn]() -> void {
       try {
         PromiseT<Ret> tmp = fn();
-        tmp.then([t](const Ret& val) -> void { t.resolve(val); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.then([t](const Ret &val) -> void { t.resolve(val); });
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
@@ -338,15 +337,15 @@ struct _FinallyPromiseImpl {
 // pm.finally(std::function<Promise<void>()>) sub-implementation
 template <template <typename T> class PromiseT, typename _Promise>
 struct _FinallyPromiseImpl<void, PromiseT, _Promise> {
-  static PromiseT<void> apply(const std::shared_ptr<_Promise>& pm,
-                              const std::function<PromiseT<void>()>& fn) {
+  static PromiseT<void> apply(const std::shared_ptr<_Promise> &pm,
+                              const std::function<PromiseT<void>()> &fn) {
     PromiseT<void> t;
     pm->finally([t, fn]() -> void {
       try {
         PromiseT<void> tmp = fn();
         tmp.then([t]() -> void { t.resolve(); });
-        tmp.error([t](const Unknown& err) -> void { t.reject(err); });
-      } catch (const Unknown& err) {
+        tmp.error([t](const Unknown &err) -> void { t.reject(err); });
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
@@ -358,13 +357,13 @@ struct _FinallyPromiseImpl<void, PromiseT, _Promise> {
 // pm.finally(std::function<Ret()>) implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _FinallyImpl {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<Ret()>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<Ret()> &fn) {
     PromiseT<Ret> t;
     pm->finally([t, fn]() -> void {
       try {
         t.resolve(fn());
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
       }
     });
@@ -374,21 +373,21 @@ struct _FinallyImpl {
 // pm.finally(std::function<Promise<Ret>()>) implementation
 template <typename Ret, template <typename T> class PromiseT, typename _Promise>
 struct _FinallyImpl<PromiseT<Ret>, PromiseT, _Promise> {
-  static PromiseT<Ret> apply(const std::shared_ptr<_Promise>& pm,
-                             const std::function<PromiseT<Ret>()>& fn) {
+  static PromiseT<Ret> apply(const std::shared_ptr<_Promise> &pm,
+                             const std::function<PromiseT<Ret>()> &fn) {
     return _FinallyPromiseImpl<Ret, PromiseT, _Promise>::apply(pm, fn);
   }
 };
 // pm.finally(std::function<void()>) implementation
 template <template <typename T> class PromiseT, typename _Promise>
 struct _FinallyImpl<void, PromiseT, _Promise> {
-  static PromiseT<void> apply(const std::shared_ptr<_Promise>& pm,
-                              const std::function<void()>& fn) {
+  static PromiseT<void> apply(const std::shared_ptr<_Promise> &pm,
+                              const std::function<void()> &fn) {
     PromiseT<void> t;
     pm->finally([t, fn]() -> void {
       try {
         fn();
-      } catch (const Unknown& err) {
+      } catch (const Unknown &err) {
         t.reject(err);
         return;
       }
@@ -411,58 +410,61 @@ struct remove_promise<PromiseT<T>, PromiseT> {
  *
  * @tparam T Promise返回的值。
  */
-template <typename T>
-class Promise {
+template <typename T> class Promise {
   struct _Promise {
-    typedef std::function<void(const T&)> type;
-    typedef std::function<void(const Unknown&)> error_type;
+    typedef std::function<void(const T &)> type;
+    typedef std::function<void(const Unknown &)> error_type;
     typedef std::function<void()> finally_type;
-    void then(const type& fn) {
+    void then(const type &fn) {
       _then = fn;
       if (_status == Resolved) {
-        _then(*(T*)_val);
+        _then(*(T *)_val);
       }
     }
-    void error(const error_type& fn) {
+    void error(const error_type &fn) {
       _error = fn;
       if (_status == Rejected) {
-        _error(*(Unknown*)_val);
+        _error(*(Unknown *)_val);
       }
     }
-    void finally(const finally_type& fn) {
+    void finally(const finally_type &fn) {
       _finally = fn;
       if (_status != Pending) {
         _finally();
       }
     }
-    void resolve(const T& val) {
+    void resolve(const T &val) {
       if (_status == Pending) {
         _status = Resolved;
-        (*(T*)_val) = val;
-        if (_then) _then(val);
-        if (_finally) _finally();
+        (*(T *)_val) = val;
+        if (_then)
+          _then(val);
+        if (_finally)
+          _finally();
       }
     }
-    void reject(const Unknown& err) {
+    void reject(const Unknown &err) {
       if (_status == Pending) {
         _status = Rejected;
-        *(Unknown*)_val = err;
-        if (_error) _error(err);
-        if (_finally) _finally();
+        *(Unknown *)_val = err;
+        if (_error)
+          _error(err);
+        if (_finally)
+          _finally();
       }
     }
     constexpr Status status() const noexcept { return _status; }
     _Promise() : _status(Pending) {}
-    _Promise(const _Promise& val) = delete;
+    _Promise(const _Promise &val) = delete;
     ~_Promise() {
       if (_status == Resolved) {
-        ((T*)_val)->~T();
+        ((T *)_val)->~T();
       } else if (_status == Rejected) {
-        ((Unknown*)_val)->~Unknown();
+        ((Unknown *)_val)->~Unknown();
       }
     }
 
-   private:
+  private:
     Status _status;
     type _then;
     error_type _error;
@@ -473,7 +475,7 @@ class Promise {
   };
   std::shared_ptr<_Promise> pm;
 
- public:
+public:
   typedef T type;
   /**
    * @brief 设定在 Promise 完成后执行的函数。返回一个对这个函数的
@@ -486,7 +488,7 @@ class Promise {
   template <typename U>
   Promise<typename remove_promise<
       decltype(std::declval<U>()(std::declval<T>())), Promise>::type>
-  then(const U& fn) const {
+  then(const U &fn) const {
     using Ret = decltype(std::declval<U>()(std::declval<T>()));
     return _ThenImpl<Ret, T, Promise, _Promise>::apply(pm, fn);
   }
@@ -501,7 +503,7 @@ class Promise {
   template <typename U>
   Promise<typename remove_promise<
       decltype(std::declval<U>()(std::declval<Unknown>())), Promise>::type>
-  error(const U& fn) const {
+  error(const U &fn) const {
     using Ret = decltype(std::declval<U>()(std::declval<Unknown>()));
     return _ErrorImpl<Ret, Promise, _Promise>::apply(pm, fn);
   }
@@ -516,7 +518,7 @@ class Promise {
    */
   template <typename U>
   Promise<typename remove_promise<decltype(std::declval<U>()()), Promise>::type>
-  finally(const U& fn) const {
+  finally(const U &fn) const {
     using Ret = decltype(std::declval<U>()());
     return _FinallyImpl<Ret, Promise, _Promise>::apply(pm, fn);
   }
@@ -525,13 +527,13 @@ class Promise {
    *
    * @param value 结果值。
    */
-  void resolve(const T& value) const { pm->resolve(value); }
+  void resolve(const T &value) const { pm->resolve(value); }
   /**
    * @brief 拒绝此Promise。
    *
    * @param err 异常。
    */
-  void reject(const Unknown& value) const { pm->reject(value); }
+  void reject(const Unknown &value) const { pm->reject(value); }
   /**
    * @brief 获得Promise的状态。
    *
@@ -544,25 +546,24 @@ class Promise {
  * @brief 没有值的 Promise 对象。
  *
  */
-template <>
-class Promise<void> {
+template <> class Promise<void> {
   struct _Promise {
     typedef std::function<void()> type;
-    typedef std::function<void(const Unknown&)> error_type;
+    typedef std::function<void(const Unknown &)> error_type;
     typedef std::function<void()> finally_type;
-    void then(const type& fn) {
+    void then(const type &fn) {
       _then = fn;
       if (_status == Resolved) {
         _then();
       }
     }
-    void error(const error_type& fn) {
+    void error(const error_type &fn) {
       _error = fn;
       if (_status == Rejected) {
         _error(_val);
       }
     }
-    void finally(const finally_type& fn) {
+    void finally(const finally_type &fn) {
       _finally = fn;
       if (_status != Pending) {
         _finally();
@@ -571,23 +572,27 @@ class Promise<void> {
     void resolve() {
       if (_status == Pending) {
         _status = Resolved;
-        if (_then) _then();
-        if (_finally) _finally();
+        if (_then)
+          _then();
+        if (_finally)
+          _finally();
       }
     }
-    void reject(const Unknown& err) {
+    void reject(const Unknown &err) {
       if (_status == Pending) {
         _status = Rejected;
         _val = err;
-        if (_error) _error(err);
-        if (_finally) _finally();
+        if (_error)
+          _error(err);
+        if (_finally)
+          _finally();
       }
     }
     constexpr Status status() const noexcept { return _status; }
-    _Promise(const _Promise& val) = delete;
+    _Promise(const _Promise &val) = delete;
     _Promise() : _status(Pending) {}
 
-   private:
+  private:
     Status _status;
     type _then;
     error_type _error;
@@ -596,7 +601,7 @@ class Promise<void> {
   };
   std::shared_ptr<_Promise> pm;
 
- public:
+public:
   typedef void type;
   /**
    * @brief 设定在 Promise 完成后执行的函数。返回一个对这个函数的
@@ -608,7 +613,7 @@ class Promise<void> {
    */
   template <typename U>
   Promise<typename remove_promise<decltype(std::declval<U>()()), Promise>::type>
-  then(const U& fn) const {
+  then(const U &fn) const {
     using Ret = decltype(std::declval<U>()());
     return _ThenImpl<Ret, void, Promise, _Promise>::apply(pm, fn);
   }
@@ -623,7 +628,7 @@ class Promise<void> {
   template <typename U>
   Promise<typename remove_promise<
       decltype(std::declval<U>()(std::declval<Unknown>())), Promise>::type>
-  error(const U& fn) const {
+  error(const U &fn) const {
     using Ret = decltype(std::declval<U>()(std::declval<Unknown>()));
     return _ErrorImpl<Ret, Promise, _Promise>::apply(pm, fn);
   }
@@ -638,7 +643,7 @@ class Promise<void> {
    */
   template <typename U>
   Promise<typename remove_promise<decltype(std::declval<U>()()), Promise>::type>
-  finally(const U& fn) const {
+  finally(const U &fn) const {
     using Ret = decltype(std::declval<U>()());
     return _FinallyImpl<Ret, Promise, _Promise>::apply(pm, fn);
   }
@@ -653,7 +658,7 @@ class Promise<void> {
    *
    * @param err 异常。
    */
-  void reject(const Unknown& value) const { pm->reject(value); }
+  void reject(const Unknown &value) const { pm->reject(value); }
   /**
    * @brief 获得Promise的状态。
    *
@@ -669,13 +674,12 @@ class Promise<void> {
  * @param val 可选，Promise的值。
  * @return Promise<Value> 已经 Resolved 的 Promise
  */
-template <typename Value>
-Promise<Value> resolve(const Value& val) {
+template <typename Value> Promise<Value> resolve(const Value &val) {
   Promise<Value> tmp;
   tmp.resolve(val);
   return tmp;
 }
-Promise<void> resolve() {
+inline Promise<void> resolve() {
   Promise<void> tmp;
   tmp.resolve();
   return tmp;
@@ -686,8 +690,7 @@ Promise<void> resolve() {
  * @tparam Value Promise 类型
  * @return Promise<Value> Promise 本身
  */
-template <typename Value>
-Promise<Value> resolve(const Promise<Value>& val) {
+template <typename Value> Promise<Value> resolve(const Promise<Value> &val) {
   return val;
 }
 /**
@@ -697,22 +700,21 @@ Promise<Value> resolve(const Promise<Value>& val) {
  * @param err 错误内容。
  * @return Promise<Value> 已经 Rejected 的 Promise
  */
-template <typename Value>
-Promise<Value> reject(const Unknown& err) {
+template <typename Value> Promise<Value> reject(const Unknown &err) {
   Promise<Value> tmp;
   tmp.reject(err);
   return tmp;
 }
 template <typename ResultType, typename Tuple, size_t TOTAL, size_t N>
 struct _promise_all {
-  static void apply(const Tuple& t, const std::shared_ptr<ResultType>& result,
-                    const std::shared_ptr<size_t>& done_count,
-                    const Promise<ResultType>& pm) {
+  static void apply(const Tuple &t, const std::shared_ptr<ResultType> &result,
+                    const std::shared_ptr<size_t> &done_count,
+                    const Promise<ResultType> &pm) {
     _promise_all<ResultType, Tuple, TOTAL, N - 1>::apply(t, result, done_count,
                                                          pm);
     std::get<N>(t).then(
         [result, done_count,
-         pm](const typename std::tuple_element<N, ResultType>::type& value)
+         pm](const typename std::tuple_element<N, ResultType>::type &value)
             -> void {
           std::get<N>(*result) = value;
           if ((++(*done_count)) == TOTAL) {
@@ -720,17 +722,17 @@ struct _promise_all {
           }
         });
     std::get<N>(t).error(
-        [pm](const Unknown&) -> void { pm.reject(Unknown()); });
+        [pm](const Unknown &) -> void { pm.reject(Unknown()); });
   }
 };
 template <typename ResultType, typename Tuple, size_t TOTAL>
 struct _promise_all<ResultType, Tuple, TOTAL, 0> {
-  static void apply(const Tuple& t, const std::shared_ptr<ResultType>& result,
-                    const std::shared_ptr<size_t>& done_count,
-                    const Promise<ResultType>& pm) {
+  static void apply(const Tuple &t, const std::shared_ptr<ResultType> &result,
+                    const std::shared_ptr<size_t> &done_count,
+                    const Promise<ResultType> &pm) {
     std::get<0>(t).then(
         [result, done_count,
-         pm](const typename std::tuple_element<0, ResultType>::type& value)
+         pm](const typename std::tuple_element<0, ResultType>::type &value)
             -> void {
           std::get<0>(*result) = value;
           if ((++(*done_count)) == TOTAL) {
@@ -738,7 +740,7 @@ struct _promise_all<ResultType, Tuple, TOTAL, 0> {
           }
         });
     std::get<0>(t).error(
-        [pm](const Unknown&) -> void { pm.reject(Unknown()); });
+        [pm](const Unknown &) -> void { pm.reject(Unknown()); });
   }
 };
 /**
@@ -750,7 +752,7 @@ struct _promise_all<ResultType, Tuple, TOTAL, 0> {
  * @return Promise<std::tuple<Args...>> 获得所有结果的 Promise。
  */
 template <typename... Args>
-Promise<std::tuple<Args...>> all(const Promise<Args>&... arg) {
+Promise<std::tuple<Args...>> all(const Promise<Args> &...arg) {
   using ResultType = std::tuple<Args...>;
   Promise<ResultType> pm;
   std::shared_ptr<ResultType> result =
@@ -763,14 +765,14 @@ Promise<std::tuple<Args...>> all(const Promise<Args>&... arg) {
 }
 template <typename ResultType, typename Tuple, size_t TOTAL, size_t N>
 struct _promise_any {
-  static void apply(const Tuple& t, const std::shared_ptr<size_t>& fail_count,
-                    const Promise<void>& pm) {
+  static void apply(const Tuple &t, const std::shared_ptr<size_t> &fail_count,
+                    const Promise<void> &pm) {
     _promise_any<ResultType, Tuple, TOTAL, N - 1>::apply(t, fail_count, pm);
     std::get<N>(t).then(
-        [pm](const typename std::tuple_element<N, ResultType>::type&) -> void {
+        [pm](const typename std::tuple_element<N, ResultType>::type &) -> void {
           pm.resolve();
         });
-    std::get<N>(t).error([pm, fail_count](const Unknown&) -> void {
+    std::get<N>(t).error([pm, fail_count](const Unknown &) -> void {
       if ((++(*fail_count)) == TOTAL) {
         pm.reject(Unknown());
       }
@@ -779,13 +781,13 @@ struct _promise_any {
 };
 template <typename ResultType, typename Tuple, size_t TOTAL>
 struct _promise_any<ResultType, Tuple, TOTAL, 0> {
-  static void apply(const Tuple& t, const std::shared_ptr<size_t>& fail_count,
-                    const Promise<void>& pm) {
+  static void apply(const Tuple &t, const std::shared_ptr<size_t> &fail_count,
+                    const Promise<void> &pm) {
     std::get<0>(t).then(
-        [pm](const typename std::tuple_element<0, ResultType>::type&) -> void {
+        [pm](const typename std::tuple_element<0, ResultType>::type &) -> void {
           pm.resolve();
         });
-    std::get<0>(t).error([pm, fail_count](const Unknown&) -> void {
+    std::get<0>(t).error([pm, fail_count](const Unknown &) -> void {
       if ((++(*fail_count)) == TOTAL) {
         pm.reject(Unknown());
       }
@@ -801,8 +803,7 @@ struct _promise_any<ResultType, Tuple, TOTAL, 0> {
  * @param arg 多个 Promise。跟返回类型有关。
  * @return Promise<void> 回调用 Promise。
  */
-template <typename... Args>
-Promise<void> any(const Promise<Args>&... arg) {
+template <typename... Args> Promise<void> any(const Promise<Args> &...arg) {
   using ResultType = std::tuple<Args...>;
   Promise<void> pm;
   std::shared_ptr<size_t> fail_count = std::shared_ptr<size_t>(new size_t(0));
@@ -811,16 +812,14 @@ Promise<void> any(const Promise<Args>&... arg) {
                                            fail_count, pm);
   return pm;
 }
-template <typename Tuple, size_t TOTAL, size_t N>
-struct _promise_race {
-  static void apply(const Tuple& t, const Promise<void>& pm) {
+template <typename Tuple, size_t TOTAL, size_t N> struct _promise_race {
+  static void apply(const Tuple &t, const Promise<void> &pm) {
     _promise_race<Tuple, TOTAL, N - 1>::apply(t, pm);
     std::get<N>(t).finally([pm]() -> void { pm.resolve(); });
   }
 };
-template <typename Tuple, size_t TOTAL>
-struct _promise_race<Tuple, TOTAL, 0> {
-  static void apply(const Tuple& t, const Promise<void>& pm) {
+template <typename Tuple, size_t TOTAL> struct _promise_race<Tuple, TOTAL, 0> {
+  static void apply(const Tuple &t, const Promise<void> &pm) {
     std::get<0>(t).finally([pm]() -> void { pm.resolve(); });
   }
 };
@@ -834,17 +833,15 @@ struct _promise_race<Tuple, TOTAL, 0> {
  * @param arg 多个 Promise。跟返回类型有关。
  * @return Promise<void> 回调用 Promise。
  */
-template <typename... Args>
-Promise<void> race(const Promise<Args>&... arg) {
+template <typename... Args> Promise<void> race(const Promise<Args> &...arg) {
   Promise<void> pm;
   _promise_race<std::tuple<Promise<Args>...>, sizeof...(Args),
                 sizeof...(Args) - 1>::apply(std::forward_as_tuple(arg...), pm);
   return pm;
 }
-template <typename Tuple, size_t TOTAL, size_t N>
-struct _promise_allSettled {
-  static void apply(const Tuple& t, const std::shared_ptr<size_t>& done_count,
-                    const Promise<void>& pm) {
+template <typename Tuple, size_t TOTAL, size_t N> struct _promise_allSettled {
+  static void apply(const Tuple &t, const std::shared_ptr<size_t> &done_count,
+                    const Promise<void> &pm) {
     _promise_allSettled<Tuple, TOTAL, N - 1>::apply(t, done_count, pm);
     std::get<N>(t).finally([done_count, pm]() -> void {
       if ((++(*done_count)) == TOTAL) {
@@ -855,8 +852,8 @@ struct _promise_allSettled {
 };
 template <typename Tuple, size_t TOTAL>
 struct _promise_allSettled<Tuple, TOTAL, 0> {
-  static void apply(const Tuple& t, const std::shared_ptr<size_t>& done_count,
-                    const Promise<void>& pm) {
+  static void apply(const Tuple &t, const std::shared_ptr<size_t> &done_count,
+                    const Promise<void> &pm) {
     std::get<0>(t).finally([done_count, pm]() -> void {
       if ((++(*done_count)) == TOTAL) {
         pm.resolve();
@@ -874,7 +871,7 @@ struct _promise_allSettled<Tuple, TOTAL, 0> {
  * @return Promise<void> 回调用 Promise。
  */
 template <typename... Args>
-Promise<void> allSettled(const Promise<Args>&... arg) {
+Promise<void> allSettled(const Promise<Args> &...arg) {
   Promise<void> pm;
   std::shared_ptr<size_t> done_count = std::shared_ptr<size_t>(new size_t(0));
   _promise_allSettled<std::tuple<Promise<Args>...>, sizeof...(Args),
@@ -882,5 +879,5 @@ Promise<void> allSettled(const Promise<Args>&... arg) {
                                                   done_count, pm);
   return pm;
 }
-}  // namespace Promise
+} // namespace Promise
 #endif

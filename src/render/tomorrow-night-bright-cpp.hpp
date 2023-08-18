@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <array>
 
-#include "../screen.h"
+#include "../screen.hpp"
 namespace TomorrowNightBrightCpp {
 typedef struct ColorText {
   std::string prefix;
@@ -15,7 +15,7 @@ typedef struct ColorText {
     return ret;
   }
   ColorText() {}
-  ColorText(const std::string& content, const std::string& prefix)
+  ColorText(const std::string &content, const std::string &prefix)
       : prefix(prefix), content(content) {}
 } ColorText;
 typedef enum TokenType {
@@ -29,7 +29,7 @@ typedef enum TokenType {
   Comment = 7,
   Literal = 8
 } TokenType;
-bool isnum(const std::string& p) {
+inline bool isnum(const std::string &p) {
   for (size_t i = 0; i < p.length(); i++) {
     if ((p[i] >= '0' && p[i] <= '9') || (p[i] >= 'A' && p[i] <= 'F') ||
         (p[i] >= 'a' && p[i] <= 'f') || p[i] == 'x' || p[i] == 'X' ||
@@ -40,35 +40,38 @@ bool isnum(const std::string& p) {
   }
   return true;
 }
-std::string _render_color(TokenType type) {
+inline std::string _render_color(TokenType type) {
   switch (type) {
-    case Keyword:
-      return "\x1b[35m";  // 关键字
-    case Operator:
-      return "\x1b[36m";  // 算符
-    case Identifier:
-      return "";  // 普通标识符
-    case Number:
-      return "\x1b[33m";  // 数字
-    case PreProcessor:
-      return "\x1b[35m";  //预处理器
-    case String:
-      return "\x1b[32m";  // 字符串
-    case Comment:
-      return "\x1b[38;5;242m";  // 注释
-    case Literal:
-      return "\x1b[34m";  // 常量
-    default:
-      return "";
+  case Keyword:
+    return "\x1b[35m"; // 关键字
+  case Operator:
+    return "\x1b[36m"; // 算符
+  case Identifier:
+    return ""; // 普通标识符
+  case Number:
+    return "\x1b[33m"; // 数字
+  case PreProcessor:
+    return "\x1b[35m"; //预处理器
+  case String:
+    return "\x1b[32m"; // 字符串
+  case Comment:
+    return "\x1b[38;5;242m"; // 注释
+  case Literal:
+    return "\x1b[34m"; // 常量
+  default:
+    return "";
   }
 }
-bool isIdentifier(const std::string& x) {
-  if (x.length() == 0) return false;
+inline bool isIdentifier(const std::string &x) {
+  if (x.length() == 0)
+    return false;
   bool flag = false;
   for (size_t i = 0; i < x.length(); i++) {
-    if (i == 1) flag = true;
+    if (i == 1)
+      flag = true;
     if (x[i] >= '0' && x[i] <= '9') {
-      if (!flag) return false;
+      if (!flag)
+        return false;
     } else if ((x[i] >= 'a' && x[i] <= 'z') || (x[i] >= 'A' && x[i] <= 'Z') ||
                x[i] == '_')
       continue;
@@ -77,17 +80,19 @@ bool isIdentifier(const std::string& x) {
   }
   return true;
 }
-void _transfer(wchar_t i, size_t& z, size_t& a) {
+inline void _transfer(wchar_t i, size_t &z, size_t &a) {
   if (i == L'\\')
     z = !z;
   else if (i == L'\"' && !z) {
-    if (a == 0 || a == 1) a = (a == 0 ? 1 : 0);
+    if (a == 0 || a == 1)
+      a = (a == 0 ? 1 : 0);
   } else if (i == L'\'' && !z) {
-    if (a == 0 || a == 2) a = (a == 0 ? 2 : 0);
+    if (a == 0 || a == 2)
+      a = (a == 0 ? 2 : 0);
   } else
     z = false;
 }
-constexpr std::array<const char*, 60> keyword = {
+constexpr std::array<const char *, 60> keyword = {
     "bool",          "short",       "int",          "long",
     "float",         "double",      "inline",       "auto",
     "restrict",      "explicit",    "typeid",       "asm",
@@ -103,8 +108,9 @@ constexpr std::array<const char*, 60> keyword = {
     "public",        "protected",   "private",      "new",
     "static_assert", "delete",      "sizeof",       "decltype",
     "const_cast",    "static_cast", "dynamic_cast", "reinterpret_cast"};
-constexpr std::array<const char*, 4> literal = {"true", "false", "NULL", "nullptr"};
-ColorText _get_colortext(const std::string& tmp) {
+constexpr std::array<const char *, 4> literal = {"true", "false", "NULL",
+                                                 "nullptr"};
+inline ColorText _get_colortext(const std::string &tmp) {
   if (std::find(keyword.cbegin(), keyword.cend(), tmp) != keyword.cend()) {
     return ColorText(tmp, _render_color(Keyword));
   } else if (std::find(literal.cbegin(), literal.cend(), tmp) !=
@@ -123,7 +129,8 @@ std::array<char, 13> separator = {' ', ';', ',',  '{',  '}', '[', ']',
 
 std::array<char, 13> op = {'+', '-', '*', '/', '>', '<', '=',
                            '!', '&', '|', '%', '^', '~'};
-std::vector<ColorText> _render_one(const std::string& text, bool* status) {
+inline std::vector<ColorText> _render_one(const std::string &text,
+                                          bool *status) {
   std::string tmp;
   std::vector<ColorText> ret;
   for (size_t i = 0, a = 0, z = 0; i < text.length(); i++) {
@@ -214,8 +221,8 @@ std::vector<ColorText> _render_one(const std::string& text, bool* status) {
   }
   return ret;
 }
-std::vector<std::vector<ColorText>> _render(
-    const std::vector<std::string>& text) {
+inline std::vector<std::vector<ColorText>>
+_render(const std::vector<std::string> &text) {
   std::vector<std::vector<ColorText>> ret(text.size());
   bool flag = false;
   for (size_t i = 0; i < text.size(); i++) {
@@ -223,18 +230,18 @@ std::vector<std::vector<ColorText>> _render(
   }
   return ret;
 }
-std::vector<std::vector<Character>> render(
-    const std::vector<std::string>& text) {
+inline std::vector<std::vector<Character>>
+render(const std::vector<std::string> &text) {
   std::vector<std::vector<ColorText>> tmp = _render(text);
   std::vector<std::vector<Character>> ret =
       std::vector<std::vector<Character>>(tmp.size());
   for (size_t i = 0; i < tmp.size(); i++) {
     for (size_t j = 0; j < tmp[i].size(); j++) {
-      std::vector<Character>&& res = tmp[i][j].output();
+      std::vector<Character> &&res = tmp[i][j].output();
       ret[i].insert(ret[i].cend(), res.begin(), res.end());
     }
   }
   return ret;
 }
-}  // namespace TomorrowNightBrightCpp
+} // namespace TomorrowNightBrightCpp
 #endif
